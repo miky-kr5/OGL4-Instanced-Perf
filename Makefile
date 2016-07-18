@@ -1,8 +1,8 @@
 CXX = g++
 TARGET = instanced vao dlist
 OBJECTS = main.o GLSLProgram.o gui.o ogl.o
-CXXFLAGS = -ansi -pedantic -Wall -DGLM_FORCE_RADIANS `pkg-config --cflags glew assimp`
-LDLIBS =  `pkg-config --libs glew assimp` -l fltk -l fltk_gl
+CXXFLAGS = -ansi -pedantic -Wall -DGLM_FORCE_RADIANS `pkg-config --cflags glew assimp` `fltk-config --cxxflags --use-gl`
+LDLIBS =  `pkg-config --libs glew assimp` `fltk-config --ldflags --use-gl`
 
 all: CXXFLAGS += -O3 -DNDEBUG
 all: programs
