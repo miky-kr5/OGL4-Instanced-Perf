@@ -3,7 +3,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <FL/Fl_Valuator.H>
+
+#include <assimp/cimport.h>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 #include "ogl.hpp"
 #include "GLSLProgram.hpp"
@@ -14,7 +17,7 @@ namespace opengl {
   //globals
   const std::string sWindowTitle = "OGL Cube";		//name of the window
   unsigned int iWidthWindow = 800, iHeightWindow = 600;	//width & height of the viewport
-  
+
   //constants
   const float NCP = 0.1f;
   const float FCP = 150.0f;
@@ -70,6 +73,7 @@ namespace opengl {
   }
 
   void initialize() {
+#if defined(USE_INSTANCED_RENDERING) || defined(USE_VAO) || defined(USE_DISPLAY_LIST)
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 		
@@ -109,6 +113,9 @@ namespace opengl {
     } glBindVertexArray(0);
 
     m_fAngle = 0.f;
+#else
+#error "Must define USE_INSTANCED_RENDERING or USE_VAO or USE_DISPLAY_LIST"
+#endif
   }
 
   void display() {

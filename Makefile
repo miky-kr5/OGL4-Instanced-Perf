@@ -1,24 +1,28 @@
 CXX = g++
-TARGET = instanced
+TARGET = instanced vao dlist
 OBJECTS = main.o GLSLProgram.o gui.o ogl.o
-DEPENDS = $(OBJECTS:.o=.d)
 CXXFLAGS = -ansi -pedantic -Wall -DGLM_FORCE_RADIANS `pkg-config --cflags assimp`
 LDLIBS = -l GLEW -l GLU -l GL -l fltk -l fltk_gl `pkg-config --libs assimp`
 
 all: CXXFLAGS += -O3 -DNDEBUG
-all: $(TARGET)
+all: programs
 
 debug: CXXFLAGS += -g
-debug: $(TARGET)
+debug: programs
 
-$(TARGET): $(OBJECTS)
-	$(CXX) -o $(TARGET) $(OBJECTS) $(CXXFLAGS) $(LDLIBS)
+programs:
+	$(CXX) -c $(CXXFLAGS) main.cpp -o main.o
+	$(CXX) -c $(CXXFLAGS) GLSLProgram.cpp -o GLSLProgram.o
+	$(CXX) -c $(CXXFLAGS) gui.cpp -o gui.o
+	$(CXX) -c $(CXXFLAGS) -DUSE_INSTANCED_RENDERING ogl.cpp -o ogl.o
+	$(CXX) -o instanced $(OBJECTS) $(CXXFLAGS) $(LDLIBS)
+	$(RM) ogl.o
+	$(CXX) -c $(CXXFLAGS) -DUSE_VAO ogl.cpp -o ogl.o
+	$(CXX) -o vao $(OBJECTS) $(CXXFLAGS) $(LDLIBS)
+	$(RM) ogl.o
+	$(CXX) -c $(CXXFLAGS) -DUSE_DISPLAY_LIST ogl.cpp -o ogl.o
+	$(CXX) -o dlist $(OBJECTS) $(CXXFLAGS) $(LDLIBS)
 
--include $(DEPENDS)
-
-%.o: %.cpp
-	$(CXX) -c $(CXXFLAGS) $*.cpp -o $*.o
-	$(CXX) -MM $(CXXFLAGS) $*.cpp > $*.d
-
+.PHONY: clean
 clean:
-	$(RM) $(TARGET) $(OBJECTS) $(DEPENDS)
+	$(RM) $(TARGET) $(OBJECTS)
