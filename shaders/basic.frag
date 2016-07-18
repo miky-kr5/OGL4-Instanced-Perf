@@ -2,8 +2,8 @@
 
 layout(location = 0) out vec4 vFragColor;
 
-in vec4 vColorVs;
+in vec4 vVertexColor;
 
 void main(void) {
-  vFragColor = vColorVs;
+  vFragColor = vVertexColor;
 }

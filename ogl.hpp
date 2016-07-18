@@ -45,32 +45,6 @@ namespace opengl
   /// The classical resized function in GLUT, including the perspective matrox construction
   ///
   void reshape(int w, int h);
-
-  ///
-  /// A FLTK callback that changes the parameter of the Geometry Shader.
-  ///
-  void geom_callback(Fl_Widget * w, void * data);
-
-  ///
-  /// Two FLTK callbacks that change the parameters of the Tessellation Shaders.
-  ///
-  void tess_callback_inner(Fl_Widget * w, void * data);
-  void tess_callback_outer(Fl_Widget * w, void * data);
-
-  ///
-  /// Function that toggles normalization on the tessellation shader.
-  ///
-  void toggle_tess();
-
-  ///
-  /// Function that activates/deactivates the lights in the geometry shader.
-  ///
-  void toggle_light();
-
-  ///
-  /// Function that activates/deactivates wireframe rendering.
-  ///
-  void toggle_lines();
 }
 
 #endif

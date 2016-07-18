@@ -3,11 +3,13 @@
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 3) out;
 
-uniform mat4 mView, mProjection, mModel;
+in vec4 vColorVs[];
+out vec4 vVertexColor;
 
 void main() {
-  for(int i = 0; i < 3; i++) {
-    gl_Position = mProjection * mView * mModel * gl_in[i].gl_Position;
+  for(int i = 0; i < gl_in.length(); i++) {
+    gl_Position = gl_in[i].gl_Position;
+    vVertexColor = vColorVs[i];
     EmitVertex();
   }
 
