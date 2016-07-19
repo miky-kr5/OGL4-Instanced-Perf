@@ -3,9 +3,9 @@
 #ifndef GUI_HPP
 #define GUI_HPP
 
-#include <FL/Fl_Gl_Window.H>
+#include <string>
 
-#include "ogl.hpp"
+#include <FL/Fl_Gl_Window.H>
 
 class GlGui : public Fl_Gl_Window {
 public:

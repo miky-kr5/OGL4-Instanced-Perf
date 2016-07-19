@@ -4,7 +4,6 @@
 #define OGL_HPP
 
 #include <string>
-#include <FL/Fl_Widget.H>
 
 namespace opengl
 {
@@ -12,24 +11,6 @@ namespace opengl
   extern const std::string sWindowTitle; //name of the window
   extern unsigned int iWidthWindow;
   extern unsigned int iHeightWindow;     //width & height of the viewport
-  extern float geom_param;
-  extern float tess_inner;
-  extern float tess_outer;
-  
-  ///
-  /// A function to create two triangles based on the quad definition
-  ///
-  /// @iIndex an integer to access into the vectors (color and points)
-  /// @a definition of the 1st index into the </code>vec_position</code> variable
-  /// @b definition of the 2nd index into the </code>vec_position</code> variable
-  /// @c definition of the 3rd index into the </code>vec_position</code> variable
-  /// @d definition of the 4th index into the </code>vec_position</code> variable
-  void quad(int& iIndex, int a, int b, int c, int d );
-
-  ///
-  /// Simple function to construct <code>iNVertices</code> vertexes over the definition of 6 faces of a cube
-  ///
-  void colorcube();
 
   ///
   /// Function to initialize OGL variables + shader's loading + VAO + VBO
@@ -45,6 +26,11 @@ namespace opengl
   /// The classical resized function in GLUT, including the perspective matrox construction
   ///
   void reshape(int w, int h);
+
+  ///
+  /// Function to destroy OGL variables.
+  ///
+  void destroy();
 }
 
 #endif

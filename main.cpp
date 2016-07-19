@@ -1,6 +1,7 @@
 #include <FL/Fl.H>
 
 #include "gui.hpp"
+#include "ogl.hpp"
 
 int main(int argc, char** argv)
 {
@@ -9,6 +10,5 @@ int main(int argc, char** argv)
   window->end();
   window->show(argc, argv);
   window->make_current();
-
   return Fl::run();
 }

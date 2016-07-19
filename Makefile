@@ -1,27 +1,54 @@
 CXX = g++
 TARGET = instanced vao dlist
-OBJECTS = main.o GLSLProgram.o gui.o ogl.o
-CXXFLAGS = -ansi -pedantic -Wall -DGLM_FORCE_RADIANS `pkg-config --cflags glew assimp` `fltk-config --cxxflags --use-gl`
-LDLIBS =  `pkg-config --libs glew assimp` `fltk-config --ldflags --use-gl`
+BASE_OBJECTS = main.o GLSLProgram.o gui.o
+BASE_HEADERS = GLSLProgram.hpp gui.hpp
+BASE_SOURCES = $(OBJECTS:.o=.cpp)
+GL_OBJECTS = ogl.o
+GL_SOURCES = ogl.cpp
+GL_HEADERS = ogl.hpp tiny_obj_loader.h
+OBJECTS = $(BASE_OBJECTS) $(GL_OBJECTS)
+CXXFLAGS = -ansi -pedantic -Wall -DGLM_FORCE_RADIANS `pkg-config --cflags glew` `fltk-config --cxxflags --use-gl`
+LDLIBS =  `pkg-config --libs glew` `fltk-config --ldflags --use-gl`
 
+.PHONY: all
 all: CXXFLAGS += -O3 -DNDEBUG
-all: programs
+all: $(TARGET)
 
+.PHONY: debug
 debug: CXXFLAGS += -g
-debug: programs
+debug: $(TARGET)
 
-programs:
+.PHONY: instanced_debug
+instanced_debug: CXXFLAGS += -g
+instanced_debug: instanced
+
+.PHONY: vao_debug
+vao_debug: CXXFLAGS += -g
+vao_debug: vao
+
+.PHONY: dlist_debug
+dlist_debug: CXXFLAGS += -g
+dlist_debug: dlist
+
+instanced: CXXFLAGS += -DUSE_INSTANCED_RENDERING
+instanced: $(BASE_OBJECTS) $(GL_SOURCES) $(GL_HEADERS)
+	$(CXX) -c $(CXXFLAGS) -DTINYOBJLOADER_IMPLEMENTATION $(GL_SOURCES) -o $(GL_OBJECTS)
+	$(CXX) -o $@ $(OBJECTS) $(CXXFLAGS) $(LDLIBS)
+
+vao: CXXFLAGS += -DUSE_VAO
+vao: $(BASE_OBJECTS) $(GL_SOURCES) $(GL_HEADERS)
+	$(CXX) -c $(CXXFLAGS) -DTINYOBJLOADER_IMPLEMENTATION $(GL_SOURCES) -o $(GL_OBJECTS)
+	$(CXX) -o $@ $(OBJECTS) $(CXXFLAGS) $(LDLIBS)
+
+dlist: CXXFLAGS += -DUSE_DISPLAY_LIST
+dlist: $(BASE_OBJECTS) $(GL_SOURCES) $(GL_HEADERS)
+	$(CXX) -c $(CXXFLAGS) -DTINYOBJLOADER_IMPLEMENTATION $(GL_SOURCES) -o $(GL_OBJECTS)
+	$(CXX) -o $@ $(OBJECTS) $(CXXFLAGS) $(LDLIBS)
+
+$(BASE_OBJECTS): $(BASE_SOURCES) $(BASE_HEADERS)
 	$(CXX) -c $(CXXFLAGS) main.cpp -o main.o
 	$(CXX) -c $(CXXFLAGS) GLSLProgram.cpp -o GLSLProgram.o
 	$(CXX) -c $(CXXFLAGS) gui.cpp -o gui.o
-	$(CXX) -c $(CXXFLAGS) -DUSE_INSTANCED_RENDERING ogl.cpp -o ogl.o
-	$(CXX) -o instanced $(OBJECTS) $(CXXFLAGS) $(LDLIBS)
-	$(RM) ogl.o
-	$(CXX) -c $(CXXFLAGS) -DUSE_VAO ogl.cpp -o ogl.o
-	$(CXX) -o vao $(OBJECTS) $(CXXFLAGS) $(LDLIBS)
-	$(RM) ogl.o
-	$(CXX) -c $(CXXFLAGS) -DUSE_DISPLAY_LIST ogl.cpp -o ogl.o
-	$(CXX) -o dlist $(OBJECTS) $(CXXFLAGS) $(LDLIBS)
 
 .PHONY: clean
 clean:

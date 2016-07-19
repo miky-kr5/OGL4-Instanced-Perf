@@ -1,0 +1,7 @@
+* OGL4-Instanced-Perf
+
+Performance comparison of different OpenGL rendering methods. Project for UCV's Computer Graphics 2 graduate course.
+
+* Notes
+
+This program uses the [[http://syoyo.github.io/tinyobjloader/][tinyobjloader]] Wavefront OBJ loader by Syoyo Fujita.

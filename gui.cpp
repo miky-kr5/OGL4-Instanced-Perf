@@ -6,6 +6,7 @@
 #include <FL/gl.h>
 
 #include "gui.hpp"
+#include "ogl.hpp"
 
 static void redraw_callback(void * arg) {
   GlGui * window = static_cast<GlGui *>(arg);
@@ -38,5 +39,10 @@ void GlGui::draw() {
 }
 
 int GlGui::handle(int event) {
+  if(event == FL_HIDE) {
+    opengl::destroy();
+    return 1;
+  }
+
   return Fl_Gl_Window::handle(event);
 }
