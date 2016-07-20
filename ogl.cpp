@@ -37,7 +37,7 @@ namespace opengl {
   static const GLfloat stride = 3.0f;
 
   //variables
-  static const glm::vec4 cameraPos = glm::vec4(0.0f, 0.0f, -10.5f, 1.0f);
+  static glm::vec4 cameraPos = glm::vec4(0.0f, 0.0f, camZ, 1.0f);
   static const glm::vec4 lightPos = glm::vec4(1.0f, 1.0f, 1.5f, 1.0f);
   static CGLSLProgram * m_program;
   static float m_fAngle;
@@ -223,6 +223,7 @@ namespace opengl {
     opengl::iHeightWindow = h;
     glViewport(0, 0, w, h);
     float k = 90;
+    cameraPos.z = camZ;
 #ifdef USE_DISPLAY_LIST
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
