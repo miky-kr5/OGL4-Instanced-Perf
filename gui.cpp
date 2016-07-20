@@ -39,10 +39,5 @@ void GlGui::draw() {
 }
 
 int GlGui::handle(int event) {
-  if(event == FL_HIDE) {
-    opengl::destroy();
-    return 1;
-  }
-
   return Fl_Gl_Window::handle(event);
 }

@@ -15,8 +15,8 @@
 
 namespace opengl {
   //globals
-  const std::string sWindowTitle = "OGL Cube";		//name of the window
-  unsigned int iWidthWindow = 800, iHeightWindow = 600;	//width & height of the viewport
+  const std::string sWindowTitle = "OGL Homework";
+  unsigned int iWidthWindow = 800, iHeightWindow = 600;
 
   //constants
   static const float NCP = 0.1f;
@@ -26,7 +26,7 @@ namespace opengl {
   //variables
   static glm::mat4x4 mProjMatrix, mModelMatrix, mViewMatrix;
   static CGLSLProgram * m_program;
-  static float m_fAngle;	//this variable is just for spinning the cube
+  static float m_fAngle;
 
 #if defined(USE_INSTANCED_RENDERING) || defined(USE_VAO)
   static GLuint m_iIndexVAO;
@@ -63,6 +63,7 @@ namespace opengl {
       m_program->addUniform("mView");
       m_program->addUniform("mProjection");
       m_program->addUniform("mModel");
+      m_program->addUniform("bInstanced");
     } m_program->disable();
 
     if(!tinyobj::LoadObj(shapes, materials, err, "models/suzane.obj", "models/")) {
@@ -77,7 +78,7 @@ namespace opengl {
       std::cout << "WARNING: Model has more than 1 mesh. Using mesh 0 only." << std::endl;
 
 #if defined(USE_DISPLAY_LIST)
-#error "Display lists coming soon."
+
 #elif defined(USE_INSTANCED_RENDERING) || defined(USE_VAO)
     //VAO
     glGenVertexArrays(1, &m_iIndexVAO);
@@ -101,22 +102,37 @@ namespace opengl {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.15f, 0.15f, 0.15f, 1.f);
 
-    mViewMatrix = glm::translate(glm::mat4(), glm::vec3(0,0,-1.5));
-    mModelMatrix = glm::rotate(glm::mat4(), glm::radians(m_fAngle), glm::vec3(0,1,0));
+    mViewMatrix = glm::translate(glm::mat4(), glm::vec3(0, 0, -10.5));
 
 #if defined(USE_VAO)
     m_program->enable(); {
+      for(int i = -9; i <= 9; i += 3) { 
+	for(int j = -7.5; j <= 9; j += 3) {
+	  mModelMatrix = glm::translate(glm::mat4(), glm::vec3(i, j, 0));
+	  mModelMatrix = glm::rotate(mModelMatrix, glm::radians(m_fAngle), glm::vec3(0, 1, 0));
+	  glUniformMatrix4fv(m_program->getLocation("mView"), 1, GL_FALSE, glm::value_ptr(mViewMatrix));
+	  glUniformMatrix4fv(m_program->getLocation("mModel"), 1, GL_FALSE, glm::value_ptr(mModelMatrix));
+	  glUniformMatrix4fv(m_program->getLocation("mProjection"), 1, GL_FALSE, glm::value_ptr(mProjMatrix));
+	  glUniform1i(m_program->getLocation("bInstanced"), 0);
+	  glBindVertexArray(m_iIndexVAO); {
+	    glDrawElements(GL_TRIANGLES, shapes[0].mesh.indices.size(), GL_UNSIGNED_INT, &shapes[0].mesh.indices[0]);
+	  } glBindVertexArray(0);
+	}
+      }
+    } m_program->disable();
+#elif defined(USE_INSTANCED_RENDERING)
+    m_program->enable(); {
+      mModelMatrix = glm::rotate(glm::mat4(), glm::radians(m_fAngle), glm::vec3(0, 1, 0));
       glUniformMatrix4fv(m_program->getLocation("mView"), 1, GL_FALSE, glm::value_ptr(mViewMatrix));
       glUniformMatrix4fv(m_program->getLocation("mModel"), 1, GL_FALSE, glm::value_ptr(mModelMatrix));
       glUniformMatrix4fv(m_program->getLocation("mProjection"), 1, GL_FALSE, glm::value_ptr(mProjMatrix));
+      glUniform1i(m_program->getLocation("bInstanced"), 1);
       glBindVertexArray(m_iIndexVAO); {
-	glDrawElements(GL_TRIANGLES, shapes[0].mesh.indices.size(), GL_UNSIGNED_INT, &shapes[0].mesh.indices[0]);
+	glDrawElementsInstanced(GL_TRIANGLES, shapes[0].mesh.indices.size(), GL_UNSIGNED_INT, &shapes[0].mesh.indices[0], 42);
       } glBindVertexArray(0);
     } m_program->disable();
-#elif defined(USE_INSTANCED_RENDERING)
-#error "Instanced rendering coming soon."
 #elif defined(USE_DISPLAY_LIST)
-#error "Display lists coming soon."
+
 #endif
 
     m_fAngle += 0.5f;
