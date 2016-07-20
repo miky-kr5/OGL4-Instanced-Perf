@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <cmath>
+#include <ctime>
 
 #include <FL/Fl.H>
 #include <FL/gl.h>
@@ -22,6 +23,7 @@ GlGui::GlGui(int x, int y, int w, int h, const char * l) : Fl_Gl_Window(x, y, w,
 }
 
 void GlGui::draw() {
+  clock_t t1, t2;
   std::ostringstream oss;
 
   if(!valid()) {
@@ -29,13 +31,15 @@ void GlGui::draw() {
       opengl::initialize();
       initialized = true;
     }
-    oss << title << " :: OpenGL " << glGetString(GL_VERSION) << " :: " << glGetString(GL_VENDOR);
-    label(oss.str().c_str());
-
     opengl::reshape(w(), h());
   }
 
+  t1 = clock();
   opengl::display();
+  t2 = clock();
+
+  oss << title << " :: OpenGL " << glGetString(GL_VERSION) << " :: " << glGetString(GL_VENDOR) << " :: ms per frame: " << (((t2 - t1) * 1000000.0f) / CLOCKS_PER_SEC);
+  label(oss.str().c_str());
 }
 
 int GlGui::handle(int event) {

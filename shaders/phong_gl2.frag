@@ -28,6 +28,5 @@ void main(void) {
   if(NdotL > 0.0)
     diffuse += bLightColor * NdotL;
 
-  //gl_FragColor = vec4(clamp(diffuse.rgb + specular.rgb + ambient.rgb, 0.0, 1.0), 1.0);
-  gl_FragColor = vec4(clamp(abs(normalize(vNormal.xyz)), 0.0, 1.0), 1.0);
+  gl_FragColor = vec4(clamp(diffuse.rgb + specular.rgb + ambient.rgb, 0.0, 1.0), 1.0);
 }

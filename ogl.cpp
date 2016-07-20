@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 #include "ogl.hpp"
 #include "GLSLProgram.hpp"
@@ -28,15 +29,20 @@ namespace opengl {
   static const float NCP = 0.1f;
   static const float FCP = 150.0f;
   static const float ANGLE = 75.f;
+  static const GLuint xInstances = 7;
+  static const GLuint yInstances = 6;
+  static const GLfloat xInit = -9.0f;
+  static const GLfloat yInit = -7.5f;
+  static const GLfloat stride = 3.0f;
 
   //variables
   static const glm::vec4 cameraPos = glm::vec4(0.0f, 0.0f, -10.5f, 1.0f);
   static const glm::vec4 lightPos = glm::vec4(1.0f, 1.0f, 1.5f, 1.0f);
-  static glm::mat4x4 mProjMatrix, mModelMatrix, mViewMatrix;
   static CGLSLProgram * m_program;
   static float m_fAngle;
 
 #if defined(USE_INSTANCED_RENDERING) || defined(USE_VAO)
+  static glm::mat4x4 mProjMatrix, mModelMatrix, mViewMatrix;
   static GLuint m_iIndexVAO;
   static GLuint iIdBuffer;
 #elif defined(USE_DISPLAY_LIST)
@@ -53,8 +59,10 @@ namespace opengl {
     int idx;
 #endif
 
+#if defined(USE_INSTANCED_RENDERING) || defined(USE_VAO)
     mModelMatrix = glm::mat4();
     mViewMatrix = glm::mat4();
+#endif
     m_fAngle = 0.f;
     
     glewInit();	
@@ -72,9 +80,6 @@ namespace opengl {
     if(shapes.size() > 1)
       std::cout << "WARNING: Model has more than 1 mesh. Using mesh 0 only." << std::endl;
 
-    std::cout << shapes[0].mesh.indices.size() << std::endl;
-    std::cout << shapes[0].mesh.positions.size() << std::endl;
-
     m_program = new CGLSLProgram();
 #if defined(USE_INSTANCED_RENDERING) || defined(USE_VAO)
     m_program->loadShader("shaders/phong_gl4.vert", CGLSLProgram::VERTEX);
@@ -90,15 +95,17 @@ namespace opengl {
       m_program->addUniform("bInstanced");
       m_program->addUniform("cameraPos");
       m_program->addUniform("lightPos");
+      m_program->addUniform("xInstances");
+      m_program->addUniform("yInstances");
+      m_program->addUniform("xInit");
+      m_program->addUniform("yInit");
+      m_program->addUniform("stride");
     } m_program->disable();
 #elif defined(USE_DISPLAY_LIST)
     m_program->loadShader("shaders/phong_gl2.vert", CGLSLProgram::VERTEX);
     m_program->loadShader("shaders/phong_gl2.frag", CGLSLProgram::FRAGMENT);
     m_program->create_link();
     m_program->enable(); {
-      m_program->addUniform("mView");
-      m_program->addUniform("mProjection");
-      m_program->addUniform("mModel");
       m_program->addUniform("cameraPos");
       m_program->addUniform("lightPos");
     } m_program->disable();
@@ -111,8 +118,8 @@ namespace opengl {
 	glBegin(GL_TRIANGLES); {
 	  for(int j = 0; j < 3; j++) {
 	    idx = shapes[0].mesh.indices[(3 * k) + j];
-	    glVertex3fv(&shapes[0].mesh.positions[3 * idx]);
 	    glNormal3fv(&shapes[0].mesh.normals[3 * idx]);
+	    glVertex3fv(&shapes[0].mesh.positions[3 * idx]);
 	  }
 	} glEnd();
       }
@@ -137,16 +144,24 @@ namespace opengl {
   }
 
   void display() {
+#if defined(USE_DISPLAY_LIST) || defined(USE_VAO)
+    GLfloat xOffset, yOffset;
+#endif
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.15f, 0.15f, 0.15f, 1.f);
 
+#if defined(USE_INSTANCED_RENDERING) || defined(USE_VAO)
     mViewMatrix = glm::translate(glm::mat4(), glm::vec3(0, 0, -10.5));
+#endif
 
     m_program->enable(); {
 #ifdef USE_VAO
-      for(int i = -9; i <= 9; i += 3) { 
+      xOffset = xInit;
+      for(int i = -9; i <= 9; i += 3) {
+	yOffset = yInit;
 	for(int j = -7.5; j <= 9; j += 3) {
-	  mModelMatrix = glm::translate(glm::mat4(), glm::vec3(i, j, 0));
+	  mModelMatrix = glm::translate(glm::mat4(), glm::vec3(xOffset, yOffset, 0));
 	  mModelMatrix = glm::rotate(mModelMatrix, glm::radians(m_fAngle), glm::vec3(0, 1, 0));
 	  glUniformMatrix4fv(m_program->getLocation("mView"), 1, GL_FALSE, glm::value_ptr(mViewMatrix));
 	  glUniformMatrix4fv(m_program->getLocation("mModel"), 1, GL_FALSE, glm::value_ptr(mModelMatrix));
@@ -157,7 +172,9 @@ namespace opengl {
 	  glBindVertexArray(m_iIndexVAO); {
 	    glDrawElements(GL_TRIANGLES, shapes[0].mesh.indices.size(), GL_UNSIGNED_INT, &shapes[0].mesh.indices[0]);
 	  } glBindVertexArray(0);
+	  yOffset += stride;
 	}
+	xOffset += stride;
       }
 #elif defined(USE_INSTANCED_RENDERING)
       mModelMatrix = glm::rotate(glm::mat4(), glm::radians(m_fAngle), glm::vec3(0, 1, 0));
@@ -167,21 +184,28 @@ namespace opengl {
       glUniform1i(m_program->getLocation("bInstanced"), 1);
       glUniform4fv(m_program->getLocation("cameraPos"), 1, glm::value_ptr(cameraPos));
       glUniform4fv(m_program->getLocation("lightPos"), 1, glm::value_ptr(lightPos));
+      glUniform1i(m_program->getLocation("xInstances"), xInstances);
+      glUniform1i(m_program->getLocation("yInstances"), yInstances);
+      glUniform1f(m_program->getLocation("xInit"), xInit);
+      glUniform1f(m_program->getLocation("yInit"), yInit);
+      glUniform1f(m_program->getLocation("stride"), stride);
       glBindVertexArray(m_iIndexVAO); {
-	glDrawElementsInstanced(GL_TRIANGLES, shapes[0].mesh.indices.size(), GL_UNSIGNED_INT, &shapes[0].mesh.indices[0], 42);
+	glDrawElementsInstanced(GL_TRIANGLES, shapes[0].mesh.indices.size(), GL_UNSIGNED_INT, &shapes[0].mesh.indices[0], xInstances * yInstances);
       } glBindVertexArray(0);
 #elif defined(USE_DISPLAY_LIST)
-      for(int i = -9; i <= 9; i += 3) { 
-	for(int j = -7.5; j <= 9; j += 3) {
-	  mModelMatrix = glm::translate(glm::mat4(), glm::vec3(i, j, 0));
-	  mModelMatrix = glm::rotate(mModelMatrix, glm::radians(m_fAngle), glm::vec3(0, 1, 0));
-	  glUniformMatrix4fv(m_program->getLocation("mView"), 1, GL_FALSE, glm::value_ptr(mViewMatrix));
-	  glUniformMatrix4fv(m_program->getLocation("mModel"), 1, GL_FALSE, glm::value_ptr(mModelMatrix));
-	  glUniformMatrix4fv(m_program->getLocation("mProjection"), 1, GL_FALSE, glm::value_ptr(mProjMatrix));
+      xOffset = xInit;
+      for(GLuint i = 0; i < xInstances; i++) {
+	yOffset = yInit;
+	for(GLuint j = 0; j < yInstances; j++) {
+	  glLoadIdentity();
+	  glTranslatef(xOffset, yOffset, 0.0f);
+	  glRotatef(m_fAngle, 0.0f, 1.0f, 0.0f);
 	  glUniform4fv(m_program->getLocation("cameraPos"), 1, glm::value_ptr(cameraPos));
 	  glUniform4fv(m_program->getLocation("lightPos"), 1, glm::value_ptr(lightPos));
-	  glCallList(m_iIndexList);  
+	  glCallList(m_iIndexList);
+	  yOffset += stride;
 	}
+	xOffset += stride;
       }
 #endif
     } m_program->disable();
@@ -198,7 +222,15 @@ namespace opengl {
     opengl::iHeightWindow = h;
     glViewport(0, 0, w, h);
     float k = 90;
-    opengl::mProjMatrix = glm::perspective(glm::radians(k), fRatio, opengl::NCP, opengl::FCP);
+#ifdef USE_DISPLAY_LIST
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(k, fRatio, NCP, FCP);
+    glTranslatef(0.0f, 0.0f, -10.5f);
+    glMatrixMode(GL_MODELVIEW);
+#elif defined(USE_INSTANCED_RENDERING) || defined(USE_VAO)
+    opengl::mProjMatrix = glm::perspective(glm::radians(k), fRatio, NCP, FCP);
+#endif
   }
 
   void destroy() {
