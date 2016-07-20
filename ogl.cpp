@@ -22,8 +22,9 @@
 
 namespace opengl {
   //globals
-  const std::string sWindowTitle = "OGL Homework";
+  const std::string sWindowTitle = "CG2 Homework";
   unsigned int iWidthWindow = 800, iHeightWindow = 600;
+  float camZ = -10.5f;
 
   //constants
   static const float NCP = 0.1f;
@@ -152,7 +153,7 @@ namespace opengl {
     glClearColor(0.15f, 0.15f, 0.15f, 1.f);
 
 #if defined(USE_INSTANCED_RENDERING) || defined(USE_VAO)
-    mViewMatrix = glm::translate(glm::mat4(), glm::vec3(0, 0, -10.5));
+    mViewMatrix = glm::translate(glm::mat4(), glm::vec3(0, 0, camZ));
 #endif
 
     m_program->enable(); {
@@ -226,7 +227,7 @@ namespace opengl {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(k, fRatio, NCP, FCP);
-    glTranslatef(0.0f, 0.0f, -10.5f);
+    glTranslatef(0.0f, 0.0f, camZ);
     glMatrixMode(GL_MODELVIEW);
 #elif defined(USE_INSTANCED_RENDERING) || defined(USE_VAO)
     opengl::mProjMatrix = glm::perspective(glm::radians(k), fRatio, NCP, FCP);

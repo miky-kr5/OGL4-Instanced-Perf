@@ -11,6 +11,7 @@ namespace opengl
   extern const std::string sWindowTitle; //name of the window
   extern unsigned int iWidthWindow;
   extern unsigned int iHeightWindow;     //width & height of the viewport
+  extern float camZ;
 
   ///
   /// Function to initialize OGL variables + shader's loading + VAO + VBO

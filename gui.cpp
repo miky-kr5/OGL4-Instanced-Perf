@@ -43,5 +43,11 @@ void GlGui::draw() {
 }
 
 int GlGui::handle(int event) {
+  if(event == FL_MOUSEWHEEL) {
+    opengl::camZ += Fl::event_dy();
+    opengl::reshape(w(), h());
+    return 1;
+  }
+
   return Fl_Gl_Window::handle(event);
 }
