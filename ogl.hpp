@@ -5,12 +5,17 @@
 
 #include <string>
 
-namespace opengl
-{
-//globals
-  extern const std::string sWindowTitle; //name of the window
+namespace opengl {
+  //globals
+  extern const std::string sWindowTitle;
   extern unsigned int iWidthWindow;
-  extern unsigned int iHeightWindow;     //width & height of the viewport
+  extern unsigned int iHeightWindow;
+  extern std::string sModelName;
+  extern unsigned int xInstances;
+  extern unsigned int yInstances;
+  extern float xInit;
+  extern float yInit;
+  extern float stride;
   extern float camZ;
 
   ///

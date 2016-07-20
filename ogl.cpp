@@ -24,17 +24,18 @@ namespace opengl {
   //globals
   const std::string sWindowTitle = "CG2 Homework";
   unsigned int iWidthWindow = 800, iHeightWindow = 600;
+  std::string sModelName = "models/suzane.obj";
   float camZ = -10.5f;
+  unsigned int xInstances = 7;
+  unsigned int yInstances = 6;
+  float xInit = -9.0f;
+  float yInit = -7.5f;
+  float stride = 3.0f;
 
   //constants
   static const float NCP = 0.1f;
   static const float FCP = 150.0f;
   static const float ANGLE = 75.f;
-  static const GLuint xInstances = 7;
-  static const GLuint yInstances = 6;
-  static const GLfloat xInit = -9.0f;
-  static const GLfloat yInit = -7.5f;
-  static const GLfloat stride = 3.0f;
 
   //variables
   static glm::vec4 cameraPos = glm::vec4(0.0f, 0.0f, camZ, 1.0f);
@@ -60,6 +61,14 @@ namespace opengl {
     int idx;
 #endif
 
+    std::cout << "Using the following parameters:" << std::endl;
+    std::cout << "\tModel name:                     " << sModelName << std::endl;
+    std::cout << "\tNumber of horizontal instances: " << xInstances << std::endl;
+    std::cout << "\tNumber of vertical instances:   " << yInstances << std::endl;
+    std::cout << "\tInitial X position:             " << xInit << std::endl;
+    std::cout << "\tInitial Y position:             " << yInit << std::endl;
+    std::cout << "\tInter-model stride:             " << stride << std::endl;
+
 #if defined(USE_INSTANCED_RENDERING) || defined(USE_VAO)
     mModelMatrix = glm::mat4();
     mViewMatrix = glm::mat4();
@@ -70,7 +79,7 @@ namespace opengl {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
-    if(!tinyobj::LoadObj(shapes, materials, err, "models/suzane.obj", "models/")) {
+    if(!tinyobj::LoadObj(shapes, materials, err, sModelName.c_str(), "models/")) {
       std::cerr << "Error loading model: " << err << std::endl;
       exit(EXIT_FAILURE);
     }
@@ -159,9 +168,9 @@ namespace opengl {
     m_program->enable(); {
 #ifdef USE_VAO
       xOffset = xInit;
-      for(int i = -9; i <= 9; i += 3) {
+      for(unsigned int i = 0; i < xInstances; i++) {
 	yOffset = yInit;
-	for(int j = -7.5; j <= 9; j += 3) {
+	for(unsigned int j = 0; j < yInstances; j++) {
 	  mModelMatrix = glm::translate(glm::mat4(), glm::vec3(xOffset, yOffset, 0));
 	  mModelMatrix = glm::rotate(mModelMatrix, glm::radians(m_fAngle), glm::vec3(0, 1, 0));
 	  glUniformMatrix4fv(m_program->getLocation("mView"), 1, GL_FALSE, glm::value_ptr(mViewMatrix));
@@ -195,9 +204,9 @@ namespace opengl {
       } glBindVertexArray(0);
 #elif defined(USE_DISPLAY_LIST)
       xOffset = xInit;
-      for(GLuint i = 0; i < xInstances; i++) {
+      for(unsigned int i = 0; i < xInstances; i++) {
 	yOffset = yInit;
-	for(GLuint j = 0; j < yInstances; j++) {
+	for(unsigned int j = 0; j < yInstances; j++) {
 	  glLoadIdentity();
 	  glTranslatef(xOffset, yOffset, 0.0f);
 	  glRotatef(m_fAngle, 0.0f, 1.0f, 0.0f);
