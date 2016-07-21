@@ -24,7 +24,7 @@ int main(int argc, char** argv)
 	  opengl::xInit = atof(argv[4]);
 	  if(argc >= 6) {
 	    opengl::yInit = atof(argv[5]);
-	    if(argc == 6) {
+	    if(argc == 7) {
 	      opengl::stride = atof(argv[6]);
 	    }
 	  }
