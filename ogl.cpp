@@ -93,7 +93,6 @@ namespace opengl {
     m_program = new CGLSLProgram();
 #if defined(USE_INSTANCED_RENDERING) || defined(USE_VAO)
     m_program->loadShader("shaders/phong_gl4.vert", CGLSLProgram::VERTEX);
-    m_program->loadShader("shaders/phong_gl4.geom", CGLSLProgram::GEOMETRY);
     m_program->loadShader("shaders/phong_gl4.frag", CGLSLProgram::FRAGMENT);
     m_program->create_link();
     m_program->enable(); {

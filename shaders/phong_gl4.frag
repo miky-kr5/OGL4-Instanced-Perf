@@ -2,9 +2,9 @@
 
 layout(location = 0) out vec4 vFragColor;
 
-in vec4 vView;
-in vec4 vLight;
-in vec4 vVertexNormal;
+in vec4 vNormalVs;
+in vec4 vViewVector;
+in vec4 vLightVector;
 
 const vec4 baseColor = vec4(1.0, 1.0, 1.0, 1.0);
 const vec4 ambient = vec4(0.025, 0.025, 0.025, 1.0);
@@ -15,9 +15,9 @@ void main(void) {
   vec4 r;
   vec4 diffuse = vec4(0.0);
   vec4 specular = vec4(0.0);
-  vec4 n = normalize(vVertexNormal);
-  vec4 l = normalize(vLight);
-  vec4 v = normalize(vView);
+  vec4 n = normalize(vNormalVs);
+  vec4 l = normalize(vLightVector);
+  vec4 v = normalize(vViewVector);
 
   NdotL = max(dot(n, l), 0.0);
   if(NdotL > 0.0) {
