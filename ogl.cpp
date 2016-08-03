@@ -47,6 +47,7 @@ namespace opengl {
   static glm::mat4x4 mProjMatrix, mModelMatrix, mViewMatrix;
   static GLuint m_iIndexVAO;
   static GLuint iIdBuffer;
+  static GLuint iElBuffer;
 #elif defined(USE_DISPLAY_LIST)
   static GLuint m_iIndexList;
 #endif
@@ -136,19 +137,30 @@ namespace opengl {
 #elif defined(USE_INSTANCED_RENDERING) || defined(USE_VAO)
     //VAO
     glGenVertexArrays(1, &m_iIndexVAO);
+    
+    //VBO - create and initialize a buffer object
+    glGenBuffers(1, &iIdBuffer);
+    glGenBuffers(1, &iElBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, iIdBuffer); {
+      glBufferData(GL_ARRAY_BUFFER, shapes[0].mesh.positions.size() * shapes[0].mesh.normals.size() * sizeof(float), NULL, GL_STATIC_DRAW );
+      glBufferSubData(GL_ARRAY_BUFFER, 0, shapes[0].mesh.positions.size() * sizeof(float), &shapes[0].mesh.positions[0]);
+      glBufferSubData(GL_ARRAY_BUFFER, shapes[0].mesh.positions.size() * sizeof(float), shapes[0].mesh.normals.size() * sizeof(float), &shapes[0].mesh.normals[0]);
+    }
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iElBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, shapes[0].mesh.indices.size() * sizeof(GLuint), &shapes[0].mesh.indices[0], GL_STATIC_DRAW);
+
     glBindVertexArray(m_iIndexVAO); {
-      //VBO - create and initialize a buffer object
-      glGenBuffers(1, &iIdBuffer);
       glBindBuffer(GL_ARRAY_BUFFER, iIdBuffer); {
-	glBufferData(GL_ARRAY_BUFFER, shapes[0].mesh.positions.size() * shapes[0].mesh.normals.size() * sizeof(float), NULL, GL_STATIC_DRAW );
-	glBufferSubData(GL_ARRAY_BUFFER, 0, shapes[0].mesh.positions.size() * sizeof(float), &shapes[0].mesh.positions[0]);
-	glBufferSubData(GL_ARRAY_BUFFER, shapes[0].mesh.positions.size() * sizeof(float), shapes[0].mesh.normals.size() * sizeof(float), &shapes[0].mesh.normals[0]);
 	glEnableVertexAttribArray(m_program->getLocation("vVertex"));
 	glVertexAttribPointer(m_program->getLocation("vVertex"), 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
 	glEnableVertexAttribArray(m_program->getLocation("vNormal"));
 	glVertexAttribPointer(m_program->getLocation("vNormal"), 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(shapes[0].mesh.positions.size() * sizeof(float)));
-      } glBindBuffer(GL_ARRAY_BUFFER, 0);
+      }
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iElBuffer);
     } glBindVertexArray(0);
+    
+    
 #endif
   }
 
@@ -179,7 +191,7 @@ namespace opengl {
 	  glUniform4fv(m_program->getLocation("cameraPos"), 1, glm::value_ptr(cameraPos));
 	  glUniform4fv(m_program->getLocation("lightPos"), 1, glm::value_ptr(lightPos));
 	  glBindVertexArray(m_iIndexVAO); {
-	    glDrawElements(GL_TRIANGLES, shapes[0].mesh.indices.size(), GL_UNSIGNED_INT, &shapes[0].mesh.indices[0]);
+	    glDrawElements(GL_TRIANGLES, shapes[0].mesh.indices.size(), GL_UNSIGNED_INT, 0);
 	  } glBindVertexArray(0);
 	  yOffset += stride;
 	}
@@ -199,7 +211,7 @@ namespace opengl {
       glUniform1f(m_program->getLocation("yInit"), yInit);
       glUniform1f(m_program->getLocation("stride"), stride);
       glBindVertexArray(m_iIndexVAO); {
-	glDrawElementsInstanced(GL_TRIANGLES, shapes[0].mesh.indices.size(), GL_UNSIGNED_INT, &shapes[0].mesh.indices[0], xInstances * yInstances);
+	glDrawElementsInstanced(GL_TRIANGLES, shapes[0].mesh.indices.size(), GL_UNSIGNED_INT, 0, xInstances * yInstances);
       } glBindVertexArray(0);
 #elif defined(USE_DISPLAY_LIST)
       xOffset = xInit;
@@ -248,6 +260,7 @@ namespace opengl {
     delete m_program;
 #if defined(USE_VAO) || defined(USE_INSTANCED_RENDERING)
     glDeleteBuffers(1, &iIdBuffer);
+    glDeleteBuffers(1, &iElBuffer);
     glDeleteVertexArrays(1, &m_iIndexVAO);
 #elif defined(USE_DISPLAY_LIST)
     glDeleteLists(m_iIndexList, 1);
