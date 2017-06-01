@@ -5,9 +5,9 @@ BASE_HEADERS = GLSLProgram.hpp gui.hpp
 BASE_SOURCES = $(BASE_OBJECTS:.o=.cpp)
 GL_OBJECTS = ogl.o
 GL_SOURCES = ogl.cpp
-GL_HEADERS = ogl.hpp tiny_obj_loader.h
+GL_HEADERS = ogl.hpp basicObjLoader.hpp tiny_obj_loader.h
 OBJECTS = $(BASE_OBJECTS) $(GL_OBJECTS)
-CXXFLAGS = -ansi -pedantic -Wall -DGLM_FORCE_RADIANS `pkg-config --cflags glew` `fltk-config --cxxflags --use-gl`
+CXXFLAGS = -Wall -DGLM_FORCE_RADIANS `pkg-config --cflags glew` `fltk-config --cxxflags --use-gl`
 LDLIBS =  `pkg-config --libs glew` `fltk-config --ldflags --use-gl`
 
 .PHONY: all

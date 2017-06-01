@@ -24,7 +24,7 @@ CGLSLProgram::~CGLSLProgram(void)
   if(m_uIdProgram > 0)
     {
       glDeleteProgram(m_uIdProgram);
-      cout << "Program deleted! " << endl;
+      //cout << "Program deleted! " << endl;
     }
 }
 
@@ -82,13 +82,13 @@ void CGLSLProgram::loadShader(std::string strFileName, SHADERTYPE typeShader)
 	{
 	  char infoLog[1024];
 	  glGetShaderInfoLog(hShader, 1024, NULL, infoLog);
-	  cout << "The shader at " << strFileName.c_str() << " failed to compile with the following errors:" << endl 
-	       << infoLog << endl;
+	  //cout << "The shader at " << strFileName.c_str() << " failed to compile with the following errors:" << endl
+	  //     << infoLog << endl;
 	  glDeleteShader(hShader);
 	}
       else	//here, everything is OK
 	{
-	  cout << "The shader at " << strFileName.c_str() << " was compiled without errors." << endl;
+	 // cout << "The shader at " << strFileName.c_str() << " was compiled without errors." << endl;
 	  m_vIdShader[typeShader] = hShader;
 	}
     }

@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
   int rc;
 
-  if(argc > 7) {
+  if(argc > 8) {
     std::cerr << "USAGE: " << argv[0] << " [MODEL [X INSTANCES [Y INSTANCES [X POS [Y POS [STRIDE]]]]]]" << std::endl;
     return EXIT_FAILURE;
   }
@@ -24,8 +24,12 @@ int main(int argc, char** argv)
 	  opengl::xInit = atof(argv[4]);
 	  if(argc >= 6) {
 	    opengl::yInit = atof(argv[5]);
-	    if(argc == 7) {
+	    if(argc >= 7) {
 	      opengl::stride = atof(argv[6]);
+	      if(argc == 8)
+	      {
+	      	opengl::camZ = atof(argv[7]);
+	      }
 	    }
 	  }
 	}
@@ -38,6 +42,7 @@ int main(int argc, char** argv)
   window->end();
   window->show(1, argv);
   window->make_current();
+  window->fullscreen();
   rc = Fl::run();
   opengl::destroy();
   return rc;

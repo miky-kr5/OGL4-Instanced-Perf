@@ -9,6 +9,7 @@
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
+#include "basicObjLoader.hpp"
 #include "ogl.hpp"
 #include "GLSLProgram.hpp"
 
@@ -43,6 +44,8 @@ namespace opengl {
   static CGLSLProgram * m_program;
   static float m_fAngle;
 
+  BasicObjLoader obj;
+
 #if defined(USE_INSTANCED_RENDERING) || defined(USE_VAO)
   static glm::mat4x4 mProjMatrix, mModelMatrix, mViewMatrix;
   static GLuint m_iIndexVAO;
@@ -52,12 +55,8 @@ namespace opengl {
   static GLuint m_iIndexList;
 #endif
 
-  // Model data.
-  static std::vector<tinyobj::shape_t> shapes;
-
   void initialize() {
     std::string err;
-    std::vector<tinyobj::material_t> materials;
 #ifdef USE_DISPLAY_LIST
     int idx;
 #endif
@@ -80,16 +79,10 @@ namespace opengl {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
-    if(!tinyobj::LoadObj(shapes, materials, err, sModelName.c_str(), "models/")) {
-      std::cerr << "Error loading model: " << err << std::endl;
+    if(!obj.loadObj(sModelName.c_str()))
       exit(EXIT_FAILURE);
-    }
 
-    assert(shapes.size() > 0);
-    assert(shapes[0].mesh.indices.size() % 3 == 0);
-
-    if(shapes.size() > 1)
-      std::cout << "WARNING: Model has more than 1 mesh. Using mesh 0 only." << std::endl;
+    assert(obj.triangleType > 1);
 
     m_program = new CGLSLProgram();
 #if defined(USE_INSTANCED_RENDERING) || defined(USE_VAO)
@@ -124,43 +117,42 @@ namespace opengl {
 #ifdef USE_DISPLAY_LIST
     m_iIndexList = glGenLists(1);
     glNewList(m_iIndexList, GL_COMPILE); {
-      for(size_t k = 0; k < shapes[0].mesh.indices.size() / 3; k++) {
-	glBegin(GL_TRIANGLES); {
-	  for(int j = 0; j < 3; j++) {
-	    idx = shapes[0].mesh.indices[(3 * k) + j];
-	    glNormal3fv(&shapes[0].mesh.normals[3 * idx]);
-	    glVertex3fv(&shapes[0].mesh.positions[3 * idx]);
-	  }
-	} glEnd();
+    int dataPerVertex = obj.dataPerTriangle / 3;
+    int triangleIndex = 0;
+    for(size_t k = 0; k < obj.Triangles.size() / obj.dataPerTriangle; k++){
+        triangleIndex = k * obj.dataPerTriangle;
+         glBegin(GL_TRIANGLES); {
+            for(int j = 0; j < 3; j++) {
+              idx = obj.Triangles[triangleIndex + j * dataPerVertex + 1];
+              glNormal3f(obj.vNormals[idx].X, obj.vNormals[idx].Y, obj.vNormals[idx].Z);
+              idx = obj.Triangles[triangleIndex + j * dataPerVertex];
+              glVertex3f(obj.vPositions[idx].X, obj.vPositions[idx].Y, obj.vPositions[idx].Z);
+            }
+     } glEnd();
       }
     } glEndList();
 #elif defined(USE_INSTANCED_RENDERING) || defined(USE_VAO)
+    float * bufferData = obj.generateBufferData();
     //VAO
     glGenVertexArrays(1, &m_iIndexVAO);
     
     //VBO - create and initialize a buffer object
     glGenBuffers(1, &iIdBuffer);
-    glGenBuffers(1, &iElBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, iIdBuffer); {
-      glBufferData(GL_ARRAY_BUFFER, shapes[0].mesh.positions.size() * shapes[0].mesh.normals.size() * sizeof(float), NULL, GL_STATIC_DRAW );
-      glBufferSubData(GL_ARRAY_BUFFER, 0, shapes[0].mesh.positions.size() * sizeof(float), &shapes[0].mesh.positions[0]);
-      glBufferSubData(GL_ARRAY_BUFFER, shapes[0].mesh.positions.size() * sizeof(float), shapes[0].mesh.normals.size() * sizeof(float), &shapes[0].mesh.normals[0]);
-    }
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iElBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, shapes[0].mesh.indices.size() * sizeof(GLuint), &shapes[0].mesh.indices[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, iIdBuffer); {
+      glBufferData(GL_ARRAY_BUFFER, (obj.Triangles.size() / obj.dataPerTriangle * 6 * 3) * sizeof(float), bufferData, GL_STATIC_DRAW);
+    }
 
     glBindVertexArray(m_iIndexVAO); {
       glBindBuffer(GL_ARRAY_BUFFER, iIdBuffer); {
-	glEnableVertexAttribArray(m_program->getLocation("vVertex"));
-	glVertexAttribPointer(m_program->getLocation("vVertex"), 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
-	glEnableVertexAttribArray(m_program->getLocation("vNormal"));
-	glVertexAttribPointer(m_program->getLocation("vNormal"), 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(shapes[0].mesh.positions.size() * sizeof(float)));
+        glEnableVertexAttribArray(m_program->getLocation("vVertex"));
+        glVertexAttribPointer(m_program->getLocation("vVertex"), 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)0);
+        glEnableVertexAttribArray(m_program->getLocation("vNormal"));
+        glVertexAttribPointer(m_program->getLocation("vNormal"), 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)(sizeof(float) * 3));
       }
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iElBuffer);
-    } glBindVertexArray(0);
-    
-    
+    } glBindVertexArray(0); glBindBuffer(GL_ARRAY_BUFFER, 0);
+    delete bufferData;
+        
 #endif
   }
 
@@ -191,7 +183,7 @@ namespace opengl {
 	  glUniform4fv(m_program->getLocation("cameraPos"), 1, glm::value_ptr(cameraPos));
 	  glUniform4fv(m_program->getLocation("lightPos"), 1, glm::value_ptr(lightPos));
 	  glBindVertexArray(m_iIndexVAO); {
-	    glDrawElements(GL_TRIANGLES, shapes[0].mesh.indices.size(), GL_UNSIGNED_INT, 0);
+	     glDrawArrays(GL_TRIANGLES, 0, obj.Triangles.size()/obj.dataPerTriangle * 3);
 	  } glBindVertexArray(0);
 	  yOffset += stride;
 	}
@@ -211,7 +203,7 @@ namespace opengl {
       glUniform1f(m_program->getLocation("yInit"), yInit);
       glUniform1f(m_program->getLocation("stride"), stride);
       glBindVertexArray(m_iIndexVAO); {
-	glDrawElementsInstanced(GL_TRIANGLES, shapes[0].mesh.indices.size(), GL_UNSIGNED_INT, 0, xInstances * yInstances);
+	       glDrawArraysInstanced(GL_TRIANGLES, 0, obj.Triangles.size()/obj.dataPerTriangle * 3, xInstances * yInstances);
       } glBindVertexArray(0);
 #elif defined(USE_DISPLAY_LIST)
       xOffset = xInit;
